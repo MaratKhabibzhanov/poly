@@ -1,0 +1,17 @@
+{% extends "poly_crud/base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <title>Patients</title>
+</head>
+<body>
+    <h1>Выберите карту пациента.</h1>
+    <ul>
+        {% for patient in patients %}
+            <li><a href="{% url 'poly_crud:card_no' patient.card_no %}">{{ patient.card_no }}</a></li>
+        {% empty %}
+            <li>Пока не добавлено ни одного пациента.</li>
+        {% endfor %}
+    </ul>
+</body>
+{% endblock content %}

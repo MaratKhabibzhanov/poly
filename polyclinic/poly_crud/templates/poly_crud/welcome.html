@@ -1,0 +1,12 @@
+{% extends "poly_crud/base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <title>Polyclinic</title>
+</head>
+<body>
+    <h1>Здравствуйте, выберите свою роль</h1>
+    <button><a href="{% url 'poly_crud:administrator' %}">Администратор</a></button>
+    <button><a href="{% url 'poly_crud:patients' %}">Доктор</a></button>
+</body>
+{% endblock content %}

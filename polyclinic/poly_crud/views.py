@@ -56,7 +56,7 @@ def treatments(request, card_no):
 @login_required
 def edit_treatment(request, id):
     try:
-        context = crud_treatment(request, id=id, group=get_group(request))
+        context = crud_treatment(request, id=id)
         if context.get('card_no'):
             return HttpResponseRedirect(reverse('poly_crud:card_no', args=(context.get('card_no'),)))
         return render(request, 'poly_crud/edit_treatment.html', context)
@@ -67,7 +67,7 @@ def edit_treatment(request, id):
 @login_required
 def add_treatment(request, card_no):
     try:
-        context = crud_treatment(request, card_no=card_no, group=get_group(request))
+        context = crud_treatment(request, card_no=card_no)
         if context.get('card_no'):
             return HttpResponseRedirect(reverse('poly_crud:card_no', args=(context.get('card_no'),)))
         return render(request, 'poly_crud/add_treatment.html', context)

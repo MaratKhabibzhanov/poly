@@ -7,6 +7,10 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models, connection, connections
 from django.db.models import UniqueConstraint
+from django.db.utils import InternalError
+from psycopg2.sql import SQL, Literal, Identifier
+
+from poly_crud.logic import get_group, dictfetchall
 
 
 class MyManager(models.Manager):
@@ -23,6 +27,91 @@ class MyManager(models.Manager):
             return self.filter(pk__in=(x[0] for x in cursor))
         finally:
             cursor.close()
+
+
+class Crud():
+    @classmethod
+    def data_preparation(cls, form):
+        name = cls.__name__
+        clean_data = form.cleaned_data
+        if name == 'Treatment':
+            form_data = (clean_data.get('date_in'), clean_data.get('date_out'), clean_data.get('diagnosis'),
+                         clean_data.get('symptom'), clean_data.get('id_doctor').id,
+                         clean_data.get('card_no_patient').card_no)
+            form_drag = [drag.id for drag in clean_data.get('treatment_drag')]
+            return form_data, form_drag
+        elif name == 'Doctor':
+            form_data = (clean_data.get('first_name'), clean_data.get('second_name'), clean_data.get('third_name'),
+                         clean_data.get('ward_number'), clean_data.get('name_speciality').name)
+            return form_data, None
+        elif name == 'Drag':
+            form_data = (clean_data.get('drag_name'), clean_data.get('id_allergy').id)
+            return form_data, None
+        fields = ('card_no', 'med_policy', 'passport', 'first_name', 'second_name', 'third_name')
+        form_data = tuple([clean_data.get(field) for field in cls.fields])
+        form_allergy = [allergy.id for allergy in clean_data.get('patient_allergy')] if name == 'Patient' else None
+        return form_data, form_allergy
+
+    @classmethod
+    def select(cls, request, id, select, out='dict'):
+        stmt = cls.select_queryes.get(select)
+        with connections[get_group(request)].cursor() as cursor:
+            if out == 'dict':
+                cursor.execute(stmt, [id, ])
+                return dictfetchall(cursor)
+            elif out == 'list':
+                cursor.execute(stmt, [id, ])
+                return [row[0] for row in cursor.fetchall()]
+
+    @classmethod
+    def add(cls, request, form):
+        form_data, form_slave = cls.data_preparation(form)
+        with connections[get_group(request)].cursor() as cursor:
+            try:
+                cursor.execute(cls.insert_master, [form_data, ])
+                if form_slave:
+                    id = cursor.fetchone()[0]
+                    for slave_id in form_slave:
+                        cursor.execute(cls.insert_slave, [(id, slave_id), ])
+                context = {'context': form_data[-1]}
+                return context
+            except InternalError as err:
+                error = str(err).split('\n')[0]
+                return {'error': error}
+
+    @classmethod
+    def edit(cls, request, id, form):
+        form_data, form_slave = cls.data_preparation(form)
+        with connections[get_group(request)].cursor() as cursor:
+            try:
+                cursor.execute(cls.update_master, [form_data, id])
+                if form_slave:
+                    cursor.execute(cls.select_slave, [id, ])
+                    table_slave = [slave[cls.slave_id] for slave in dictfetchall(cursor)]
+                    for drag in form_slave:
+                        if drag not in table_slave:
+                            cursor.execute(cls.insert_slave, [(id, drag), ])
+                        else:
+                            table_slave.remove(drag)
+                    for drag in table_slave:
+                        cursor.execute(cls.del_slave, [id, drag])
+                context = {'context': form_data[-1]}
+                return context
+            except InternalError as err:
+                error = str(err).split('\n')[0]
+                return {'error': error}
+
+    @classmethod
+    def dell(cls, request, id, returning=None):
+        stmt = SQL(cls.del_master).format(id=Literal(id), ret=Identifier(returning))
+        with connections[get_group(request)].cursor() as cursor:
+            try:
+                cursor.execute(stmt)
+                context = {'context': cursor.fetchone()[0]}
+                return context
+            except InternalError as err:
+                error = str(err).split('\n')[0]
+                return {'error': error}
 
 
 class Allergy(models.Model):
@@ -86,9 +175,6 @@ class Patient(models.Model):
     first_name = models.CharField(max_length=45)
     second_name = models.CharField(max_length=45)
     third_name = models.CharField(max_length=45)
-    id_allergy = models.ForeignKey(Allergy, on_delete=models.PROTECT,
-                                   db_column='id_allergy',
-                                   blank=True, null=True)
     objects = MyManager()
 
     def __str__(self):
@@ -97,9 +183,6 @@ class Patient(models.Model):
     class Meta:
         managed = False
         db_table = 'patient'
-        indexes = [
-            models.Index(fields=['id_allergy'], name='idx_allergy'),
-        ]
 
 
 class Speciality(models.Model):
@@ -115,7 +198,7 @@ class Speciality(models.Model):
         db_table = 'speciality'
 
 
-class Treatment(models.Model):
+class Treatment(Crud, models.Model):
     id = models.BigAutoField(primary_key=True)
     date_in = models.DateField()
     date_out = models.DateField(blank=True, null=True)
@@ -126,6 +209,24 @@ class Treatment(models.Model):
     card_no_patient = models.ForeignKey(Patient, on_delete=models.CASCADE,
                                         db_column='card_no_patient')
     objects = MyManager()
+
+    slave_id = 'id_drag'
+    select_treatment = "SELECT * FROM treatment WHERE id = %s;"
+    select_drag = """SELECT d.id FROM drag AS d 
+                JOIN treatment_has_drag AS td ON td.id_drag = d.id WHERE td.id_treatment = %s;"""
+    select_slave = "SELECT id_drag FROM treatment_has_drag WHERE id_treatment = %s;"
+    select_queryes = {'select_treatment': select_treatment, 'select_drag': select_drag}
+
+    del_master = "DELETE FROM treatment WHERE id = {id} RETURNING {ret};"
+    del_slave = "DELETE FROM treatment_has_drag WHERE id_treatment = %s AND id_drag = %s;"
+
+    insert_master = """INSERT INTO treatment 
+           (date_in, date_out, diagnosis, symptom, id_doctor, card_no_patient) 
+           VALUES %s RETURNING id;"""
+    insert_slave = "INSERT INTO treatment_has_drag VALUES %s;"
+
+    update_master = """UPDATE treatment SET (date_in, date_out, diagnosis, symptom, id_doctor, card_no_patient) = %s 
+    WHERE id = %s;"""
 
     class Meta:
         managed = False
@@ -139,6 +240,7 @@ class Treatment(models.Model):
             models.Index(fields=['id_doctor'], name='idx_doctor'),
         ]
 
+
 class TreatmentHasDrag(models.Model):
     id_treatment = models.ForeignKey(Treatment, on_delete=models.CASCADE,
                                      db_column='id_treatment', primary_key=True)
@@ -149,7 +251,22 @@ class TreatmentHasDrag(models.Model):
     class Meta:
         managed = False
         db_table = 'treatment_has_drag'
-        #unique_together = (('id_treatment', 'id_drag'),)
+        # unique_together = (('id_treatment', 'id_drag'),)
         UniqueConstraint(fields=('id_treatment', 'id_drag'),
                          name='treatmenthasdrag_uq')
+
+
+class PatientHasAllergy(models.Model):
+    card_no_patient = models.ForeignKey(Patient, on_delete=models.CASCADE,
+                                        db_column='card_no_patient', primary_key=True)
+    id_allergy = models.ForeignKey(Allergy, on_delete=models.PROTECT,
+                                   db_column='id_allergy')
+    objects = MyManager()
+
+    class Meta:
+        managed = False
+        db_table = 'patient_has_allergy'
+        # unique_together = (('card_no_patient', 'id_allergy'),)
+        UniqueConstraint(fields=('card_no_patient', 'id_allergy'),
+                         name='patienthasallergy_uq')
 

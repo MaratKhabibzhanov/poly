@@ -1,14 +1,10 @@
-from django.contrib.auth import get_user
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from django.db import connections
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.db.utils import InternalError
 
 from poly_crud.form import TreatmentForm
-from poly_crud.logic import crud_treatment, get_group, select
+from poly_crud.logic import *
 from poly_crud.models import Doctor, Treatment, Patient, Drag
 
 
@@ -19,20 +15,6 @@ def welcome(request):
 @login_required
 def administrator(request):
     out = "Приветствую, администратор!"
-    # "SELECT card_no_patient FROM treatment WHERE id = %s;"
-    # "SELECT * FROM treatment_has_drag AS tg "
-    # "WHERE tg.id_treatment = %s AND tg.id_drag = %s;"
-    print(select(request=request, table_name='treatment', select_column=('card_no_patient', ), where_col=('id',),
-                 where_val=('48',)))
-    "SELECT d.id "
-    "FROM drag AS d "
-    "JOIN treatment_has_drag AS td ON td.id_drag = d.id "
-    "WHERE td.id_treatment = %s;"
-    print(select(request=request, table_name='drag', join_table=('treatment_has_drag', ), join_ids=(('id_drag', 'id'),),
-                 select_column=('id', ), where_col=('id_treatment',),
-                 where_val=('103',)))
-    print(select(request=request, table_name='drag'))
-
     return HttpResponse(out)
 
 
@@ -55,21 +37,35 @@ def treatments(request, card_no):
 
 @login_required
 def edit_treatment(request, id):
-    try:
-        context = crud_treatment(request, id=id)
-        if context.get('card_no'):
-            return HttpResponseRedirect(reverse('poly_crud:card_no', args=(context.get('card_no'),)))
-        return render(request, 'poly_crud/edit_treatment.html', context)
-    except TypeError:
-        return HttpResponse(context)
+    data = Treatment.select(request, id=id, select='select_treatment')[0]
+    drag = Treatment.select(request, id=id, select='select_drag', out='list')
+    data['treatment_drag'] = drag
+    if request.method == 'POST':
+        if request.POST.get('action') == 'Delete':
+            context = Treatment.dell(request, id=id, returning='card_no_patient')
+        form = TreatmentForm(request.POST, request=request)
+        if form.is_valid():
+            context = Treatment.edit(request=request, id=id, form=form)
+        if context.get('context'):
+            return HttpResponseRedirect(reverse('poly_crud:card_no', args=(context.get('context'),)))
+        return HttpResponse(context.get('error'))
+    else:
+        form = TreatmentForm(data, request=request)
+    context = {'form': form}
+    return render(request, 'poly_crud/edit_treatment.html', context)
 
 
 @login_required
 def add_treatment(request, card_no):
-    try:
-        context = crud_treatment(request, card_no=card_no)
-        if context.get('card_no'):
-            return HttpResponseRedirect(reverse('poly_crud:card_no', args=(context.get('card_no'),)))
-        return render(request, 'poly_crud/add_treatment.html', context)
-    except TypeError:
-        return HttpResponse(context)
+    data = {'card_no_patient': card_no}
+    if request.method == 'POST':
+        form = TreatmentForm(request.POST, request=request)
+        if form.is_valid():
+            context = Treatment.add(request=request, form=form)
+            if context.get('context'):
+                return HttpResponseRedirect(reverse('poly_crud:card_no', args=(card_no,)))
+            return HttpResponse(context.get('error'))
+    else:
+        form = TreatmentForm(data, request=request)
+    context = {'form': form}
+    return render(request, 'poly_crud/add_treatment.html', context)

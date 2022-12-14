@@ -1,8 +1,22 @@
 {% extends "poly_crud/base.html" %}
 {% block content %}
+<head>
+    <meta charset="UTF-8">
+    <title>Авторизация</title>
+</head>
 {% if form.errors %}
 <p>Имя пользователя или пароль не верны, попробуйте снова.</p>
 {% endif %}
+
+{% if next %}
+  {% if user.is_authenticated %}
+    <p>У вашего аккаунта нет доступа к этой странице. Чтобы продолжить,
+        войдите в систему с учетной записью, которая имеет доступ.</p>
+  {% else %}
+    <p>Пожалуйста, войдите что-бы увидеть содержимое.</p>
+  {% endif %}
+{% endif %}
+
 <form method="post" action="{% url 'users:login' %}">
 {% csrf_token %}
 {{ form.as_p }}

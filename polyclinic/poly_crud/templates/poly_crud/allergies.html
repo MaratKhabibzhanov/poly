@@ -1,0 +1,20 @@
+{% extends "poly_crud/base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <title>Список аллергии</title>
+</head>
+<body>
+    <h1>Выберите аллергию.</h1>
+    <table class="table">
+    <ul>
+    {% for allergy in allergies %}
+        <li><a href="{% url 'poly_crud:edit_allergy' allergy.id %}">{{ allergy.allergy_prep }}</a></li>
+    {% empty %}
+        <li>Пока не добавлено ни одной аллергии.</li>
+    {% endfor %}
+    </ul>
+    <button><a href="{% url 'poly_crud:add_allergy' %}">Добавить новую</a></button>
+    </table>
+</body>
+{% endblock content %}

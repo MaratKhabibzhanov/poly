@@ -1,0 +1,20 @@
+{% extends "poly_crud/base.html" %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <title>Администрирование</title>
+</head>
+
+<body>
+    <h1>Выберите что хотите просмотреть</h1>
+    <ul>
+        <button><a href="{% url 'poly_crud:allergies' %}">Аллергии</a></button>
+        <button><a href="{% url 'poly_crud:specialties' %}">Специальности</a></button>
+        <button><a href="{% url 'poly_crud:drags' %}">Лекарства</a></button>
+        <button><a href="{% url 'poly_crud:doctors' %}">Доктора</a></button>
+        <button><a href="{% url 'poly_crud:treatments' %}">Лечения</a></button>
+        <button><a href="{% url 'poly_crud:patients' %}">Пациенты</a></button>
+
+    </ul>
+</body>
+{% endblock content %}

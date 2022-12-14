@@ -2,16 +2,20 @@
 {% block content %}
 <head>
     <meta charset="UTF-8">
-    <title>Patients</title>
+    <title>Пациенты</title>
 </head>
 <body>
-    <h1>Выберите карту пациента.</h1>
+    <h1>Выберите пациента</h1>
+    <table class="table">
     <ul>
-        {% for patient in patients %}
-            <li><a href="{% url 'poly_crud:card_no' patient.card_no %}">{{ patient.card_no }}</a></li>
-        {% empty %}
-            <li>Пока не добавлено ни одного пациента.</li>
-        {% endfor %}
+    {% for patient in patients %}
+        <li><a href="{% url 'poly_crud:edit_patient' patient.card_no %}">{{ patient.second_name }}
+            {{ patient.first_name }} {{ patient.third_name }}</a></li>
+    {% empty %}
+        <li>Пока не добавлено ни одного пациента</li>
+    {% endfor %}
     </ul>
+    <button><a href="{% url 'poly_crud:add_patient' %}">Добавить нового</a></button>
+    </table>
 </body>
 {% endblock content %}

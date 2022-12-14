@@ -7,7 +7,7 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models, connection, connections
 from django.db.models import UniqueConstraint
-from django.db.utils import InternalError
+from django.db.utils import InternalError, IntegrityError
 from psycopg2.sql import SQL, Literal, Identifier
 
 from poly_crud.logic import get_group, dictfetchall
@@ -47,7 +47,6 @@ class Crud():
         elif name == 'Drag':
             form_data = (clean_data.get('drag_name'), clean_data.get('id_allergy').id)
             return form_data, None
-        fields = ('card_no', 'med_policy', 'passport', 'first_name', 'second_name', 'third_name')
         form_data = tuple([clean_data.get(field) for field in cls.fields])
         form_allergy = [allergy.id for allergy in clean_data.get('patient_allergy')] if name == 'Patient' else None
         return form_data, form_allergy
@@ -78,6 +77,8 @@ class Crud():
             except InternalError as err:
                 error = str(err).split('\n')[0]
                 return {'error': error}
+            # except IntegrityError:
+            #     return {'error': 'Такая запись уже есть!'}
 
     @classmethod
     def edit(cls, request, id, form):
@@ -100,24 +101,40 @@ class Crud():
             except InternalError as err:
                 error = str(err).split('\n')[0]
                 return {'error': error}
+            # except IntegrityError:
+            #     return {'error': 'Такая запись уже есть!'}
 
     @classmethod
     def dell(cls, request, id, returning=None):
-        stmt = SQL(cls.del_master).format(id=Literal(id), ret=Identifier(returning))
+        stmt = SQL(cls.del_master).format(id=Literal(id),
+                                          ret=Identifier(returning) if returning else None)
         with connections[get_group(request)].cursor() as cursor:
             try:
                 cursor.execute(stmt)
-                context = {'context': cursor.fetchone()[0]}
-                return context
+                if returning:
+                    context = {'context': cursor.fetchone()[0]}
+                    return context
             except InternalError as err:
                 error = str(err).split('\n')[0]
                 return {'error': error}
+            except IntegrityError:
+                return {'error': 'Эту запись нельзя удалить! Есть связанные с ней данные!'}
 
 
-class Allergy(models.Model):
+class Allergy(Crud, models.Model):
     id = models.BigAutoField(primary_key=True)
     allergy_prep = models.CharField(unique=True, max_length=100)
     objects = MyManager()
+
+    fields = ('allergy_prep',)
+    select_allergy = "SELECT * FROM allergy WHERE id = %s;"
+    select_queryes = {'select_allergy': select_allergy}
+
+    del_master = "DELETE FROM allergy WHERE id = {id}"
+
+    insert_master = """INSERT INTO allergy (allergy_prep) VALUES %s RETURNING id;"""
+
+    update_master = """UPDATE allergy SET allergy_prep = %s WHERE id = %s;"""
 
     def __str__(self):
         return self.allergy_prep
@@ -127,7 +144,7 @@ class Allergy(models.Model):
         db_table = 'allergy'
 
 
-class Doctor(models.Model):
+class Doctor(Crud, models.Model):
     id = models.BigAutoField(primary_key=True)
     first_name = models.CharField(max_length=45)
     second_name = models.CharField(max_length=45)
@@ -138,6 +155,17 @@ class Doctor(models.Model):
                                         db_column='name_speciality',
                                         blank=True, null=True)
     objects = MyManager()
+
+    select_doctor = "SELECT * FROM doctor WHERE id = %s;"
+    select_queryes = {'select_doctor': select_doctor}
+
+    del_master = "DELETE FROM doctor WHERE id = {id};"
+
+    insert_master = """INSERT INTO doctor (first_name, second_name, third_name, ward_number, name_speciality) 
+    VALUES %s RETURNING id;"""
+
+    update_master = """UPDATE doctor SET (first_name, second_name, third_name, ward_number, name_speciality)  = %s 
+    WHERE id = %s;"""
 
     def __str__(self):
         return f'{self.id} {self.name_speciality} {self.first_name} {self.second_name} {self.third_name}'
@@ -153,12 +181,21 @@ class Doctor(models.Model):
         ]
 
 
-class Drag(models.Model):
+class Drag(Crud, models.Model):
     id = models.BigAutoField(primary_key=True)
     drag_name = models.CharField(unique=True, max_length=100)
     id_allergy = models.ForeignKey(Allergy, on_delete=models.PROTECT,
                                    db_column='id_allergy')
     objects = MyManager()
+
+    select_drag = "SELECT * FROM drag WHERE id = %s;"
+    select_queryes = {'select_drag': select_drag}
+
+    del_master = "DELETE FROM drag WHERE id = {id};"
+
+    insert_master = """INSERT INTO drag (drag_name, id_allergy) VALUES %s RETURNING id;"""
+
+    update_master = """UPDATE drag SET (drag_name, id_allergy) = %s WHERE id = %s;"""
 
     def __str__(self):
         return self.drag_name
@@ -168,7 +205,7 @@ class Drag(models.Model):
         db_table = 'drag'
 
 
-class Patient(models.Model):
+class Patient(Crud, models.Model):
     card_no = models.CharField(primary_key=True, max_length=7)
     med_policy = models.CharField(unique=True, max_length=16)
     passport = models.CharField(unique=True, max_length=10)
@@ -176,6 +213,25 @@ class Patient(models.Model):
     second_name = models.CharField(max_length=45)
     third_name = models.CharField(max_length=45)
     objects = MyManager()
+
+    slave_id = 'id_allergy'
+    fields = ('card_no', 'med_policy', 'passport', 'first_name', 'second_name', 'third_name')
+    select_patient = "SELECT * FROM patient WHERE card_no = %s;"
+    select_allergy = """SELECT a.id FROM allergy AS a 
+                    JOIN patient_has_allergy AS pa ON pa.id_allergy = a.id WHERE pa.card_no_patient = %s;"""
+    select_slave = "SELECT id_allergy FROM patient_has_allergy WHERE card_no_patient = %s;"
+    select_queryes = {'select_patient': select_patient, 'select_allergy': select_allergy}
+
+    del_master = "DELETE FROM patient WHERE card_no = {id};"
+    del_slave = "DELETE FROM patient_has_allergy WHERE card_no_patient = %s AND id_allergy = %s;"
+
+    insert_master = """INSERT INTO patient 
+               (card_no, med_policy, passport, first_name, second_name, third_name) VALUES %s RETURNING card_no;"""
+    insert_slave = "INSERT INTO patient_has_allergy VALUES %s;"
+
+    update_master = """UPDATE patient SET (card_no, med_policy, passport, first_name, second_name, third_name) = %s 
+        WHERE card_no = %s;"""
+
 
     def __str__(self):
         return self.card_no
@@ -185,10 +241,20 @@ class Patient(models.Model):
         db_table = 'patient'
 
 
-class Speciality(models.Model):
+class Speciality(Crud, models.Model):
     name = models.CharField(primary_key=True, max_length=45)
     department_name = models.CharField(max_length=45)
     objects = MyManager()
+
+    fields = ('name', 'department_name')
+    select_speciality = "SELECT * FROM speciality WHERE name = %s;"
+    select_queryes = {'select_speciality': select_speciality}
+
+    del_master = "DELETE FROM speciality WHERE name = {id}"
+
+    insert_master = """INSERT INTO speciality (name, department_name) VALUES %s RETURNING name;"""
+
+    update_master = """UPDATE speciality SET (name, department_name) = %s WHERE name = %s;"""
 
     def __str__(self):
         return self.name

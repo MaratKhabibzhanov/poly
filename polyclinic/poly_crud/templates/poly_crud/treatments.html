@@ -2,19 +2,16 @@
 {% block content %}
 <head>
     <meta charset="UTF-8">
-    <title>Doctor</title>
+    <title>Пациенты</title>
 </head>
 <body>
-    <h1>Выберите дату начала лечения.</h1>
-    <table class="table">
+    <h1>Выберите карту пациента.</h1>
     <ul>
-    {% for treatment in treatments %}
-        <li><a href="{% url 'poly_crud:edit_treatment' treatment.id %}">{{ treatment.date_in }}</a></li>
-    {% empty %}
-        <li>Пока не добавлено ни одного лечения.</li>
-    {% endfor %}
+        {% for treatment in treatments %}
+            <li><a href="{% url 'poly_crud:tr_patients' treatment.card_no %}">{{ treatment.card_no }}</a></li>
+        {% empty %}
+            <li>Пока не добавлено ни одного пациента.</li>
+        {% endfor %}
     </ul>
-    <button><a href="{% url 'poly_crud:add_treatment' card_no %}">Добавить новое</a></button>
-    </table>
 </body>
 {% endblock content %}

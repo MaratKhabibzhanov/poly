@@ -2,11 +2,11 @@
 {% block content %}
 <head>
     <meta charset="UTF-8">
-    <title>Polyclinic</title>
+    <title>Поликлиника</title>
 </head>
 <body>
-    <h1>Здравствуйте, выберите свою роль</h1>
-    <button><a href="{% url 'poly_crud:administrator' %}">Администратор</a></button>
-    <button><a href="{% url 'poly_crud:patients' %}">Доктор</a></button>
+    <h1>Чем хотите заниматься?</h1>
+    <button><a href="{% url 'poly_crud:administrator' %}">Администрированием</a></button>
+    <button><a href="{% url 'poly_crud:treatments' %}">Лечением</a></button>
 </body>
 {% endblock content %}

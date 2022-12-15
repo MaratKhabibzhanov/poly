@@ -1,20 +1,24 @@
 {% extends "poly_crud/base.html" %}
-{% block content %}
+{% block header %}
 <head>
-    <meta charset="UTF-8">
     <title>Список лечений</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>Выберите дату начала лечения</h2>
+    </div>
 </head>
+{% endblock header %}
+{% block content %}
 <body>
-    <h1>Выберите дату начала лечения.</h1>
     <table class="table">
     <ul>
     {% for treatment in treatments %}
-        <li><a href="{% url 'poly_crud:edit_treatment' treatment.id %}">{{ treatment.date_in }}</a></li>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'poly_crud:edit_treatment' treatment.id %}" role="button">{{ treatment.date_in }}</a>
+          <p></p>
     {% empty %}
-        <li>Пока не добавлено ни одного лечения.</li>
+        <p>Пока не добавлено ни одного лечения</p>
     {% endfor %}
     </ul>
-    <button><a href="{% url 'poly_crud:add_treatment' card_no %}">Добавить новое</a></button>
+    <a class="btn btn-info" href="{% url 'poly_crud:add_treatment' card_no %}" role="button">Добавить новое</a>
     </table>
 </body>
 {% endblock content %}

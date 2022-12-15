@@ -1,11 +1,16 @@
 {% extends "poly_crud/base.html" %}
-{% block content %}
+{% load bootstrap5 %}
+{% block header %}
 <head>
-    <meta charset="UTF-8">
     <title>Авторизация</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>Авторизация</h2>
+    </div>
 </head>
+{% endblock header %}
+{% block content %}
 {% if form.errors %}
-<p>Имя пользователя или пароль не верны, попробуйте снова.</p>
+<p>Имя пользователя или пароль не верны, попробуйте снова</p>
 {% endif %}
 
 {% if next %}
@@ -17,10 +22,12 @@
   {% endif %}
 {% endif %}
 
-<form method="post" action="{% url 'users:login' %}">
+    <form method="post" action="{% url 'users:login' %}" class="form">
 {% csrf_token %}
-{{ form.as_p }}
-<button name="submit">Войти</button>
-<input type="hidden" name="next" value="{% url 'poly_crud:welcome' %}" />
-</form>
+        {% bootstrap_form form %}
+        {% buttons %}
+            <button name="submit" class="btn btn-info">Войти</button>
+        {% endbuttons %}
+    <input type="hidden" name="next" value="{% url 'poly_crud:welcome' %}" />
+    </form>
 {% endblock content %}

@@ -1,20 +1,21 @@
 {% extends "poly_crud/base.html" %}
-{% block content %}
+{% block header %}
 <head>
-    <meta charset="UTF-8">
     <title>Администрирование</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>Выберите что хотите просмотреть</h2>
+    </div>
 </head>
-
+{% endblock header %}
+{% block content %}
 <body>
-    <h1>Выберите что хотите просмотреть</h1>
     <ul>
-        <button><a href="{% url 'poly_crud:allergies' %}">Аллергии</a></button>
-        <button><a href="{% url 'poly_crud:specialties' %}">Специальности</a></button>
-        <button><a href="{% url 'poly_crud:drags' %}">Лекарства</a></button>
-        <button><a href="{% url 'poly_crud:doctors' %}">Доктора</a></button>
-        <button><a href="{% url 'poly_crud:treatments' %}">Лечения</a></button>
-        <button><a href="{% url 'poly_crud:patients' %}">Пациенты</a></button>
-
+        <a class="btn btn-info" href="{% url 'poly_crud:allergies' %}" role="button">Аллергии</a><p></p>
+        <a class="btn btn-info" href="{% url 'poly_crud:specialties' %}" role="button">Специальности</a><p></p>
+        <a class="btn btn-info" href="{% url 'poly_crud:drags' %}" role="button">Лекарства</a><p></p>
+        <a class="btn btn-info" href="{% url 'poly_crud:doctors' %}" role="button">Доктора</a><p></p>
+        <a class="btn btn-info" href="{% url 'poly_crud:treatments' %}" role="button">Лечения</a><p></p>
+        <a class="btn btn-info" href="{% url 'poly_crud:patients' %}" role="button">Пациенты</a><p></p>
     </ul>
 </body>
 {% endblock content %}

@@ -76,9 +76,9 @@ class DoctorForm(forms.Form):
 
 
 class PatientForm(forms.Form):
-    card_no = forms.CharField(label='Номер карты', empty_value=None, max_length=7)
-    med_policy = forms.CharField(label='Номер полиса', empty_value=None, max_length=16)
-    passport = forms.CharField(label='Номер паспорта', empty_value=None, max_length=10)
+    card_no = forms.CharField(label='Номер карты', help_text='Номер формата "АБ1234В"', empty_value=None, max_length=7)
+    med_policy = forms.CharField(label='Номер полиса', help_text='Номер полиса из 16 цифр', empty_value=None, max_length=16)
+    passport = forms.CharField(label='Номер паспорта', help_text='Номер паспорта из 10 цифр', empty_value=None, max_length=10)
     second_name = forms.CharField(label='Фамилия', empty_value=None, max_length=45)
     first_name = forms.CharField(label='Имя', empty_value=None, max_length=45)
     third_name = forms.CharField(label='Очество', empty_value=None, max_length=45)

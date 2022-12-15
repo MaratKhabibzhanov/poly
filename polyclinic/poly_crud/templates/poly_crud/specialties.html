@@ -1,20 +1,24 @@
 {% extends "poly_crud/base.html" %}
-{% block content %}
+{% block header %}
 <head>
-    <meta charset="UTF-8">
     <title>Специальности</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>Выберите специальность</h2>
+    </div>
 </head>
+{% endblock header %}
+{% block content %}
 <body>
-    <h1>Выберите специальность.</h1>
     <table class="table">
     <ul>
     {% for speciality in specialties %}
-        <li><a href="{% url 'poly_crud:edit_speciality' speciality.name %}">{{ speciality.name }}</a></li>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'poly_crud:edit_speciality' speciality.name %}" role="button">{{ speciality.name }}</a>
+          <p></p>
     {% empty %}
-        <li>Пока не добавлено ни одной специальности.</li>
+        <p>Пока не добавлено ни одной специальности</p>
     {% endfor %}
     </ul>
-    <button><a href="{% url 'poly_crud:add_speciality' %}">Добавить новую</a></button>
+    <a class="btn btn-info" href="{% url 'poly_crud:add_speciality' %}" role="button">Добавить новую</a>
     </table>
 </body>
 {% endblock content %}

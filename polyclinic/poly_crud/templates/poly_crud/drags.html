@@ -1,20 +1,24 @@
 {% extends "poly_crud/base.html" %}
-{% block content %}
+{% block header %}
 <head>
-    <meta charset="UTF-8">
     <title>Лекарства</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>Выберите лекарство</h2>
+    </div>
 </head>
+{% endblock header %}
+{% block content %}
 <body>
-    <h1>Выберите лекарство</h1>
     <table class="table">
     <ul>
     {% for drag in drags %}
-        <li><a href="{% url 'poly_crud:edit_drag' drag.id %}">{{ drag.drag_name }}</a></li>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'poly_crud:edit_drag' drag.id %}" role="button">{{ drag.drag_name }}</a>
+          <p></p>
     {% empty %}
-        <li>Пока не добавлено ни одного лекарства</li>
+        <p>Пока не добавлено ни одного лекарства</p>
     {% endfor %}
     </ul>
-    <button><a href="{% url 'poly_crud:add_drag' %}">Добавить новое</a></button>
+    <a class="btn btn-info" href="{% url 'poly_crud:add_drag' %}" role="button">Добавить новое</a>
     </table>
 </body>
 {% endblock content %}

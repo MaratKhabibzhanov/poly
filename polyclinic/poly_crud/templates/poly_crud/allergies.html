@@ -1,20 +1,22 @@
 {% extends "poly_crud/base.html" %}
 {% block content %}
 <head>
-    <meta charset="UTF-8">
     <title>Список аллергии</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>Выберите аллергию</h2>
+    </div>
 </head>
 <body>
-    <h1>Выберите аллергию.</h1>
     <table class="table">
     <ul>
     {% for allergy in allergies %}
-        <li><a href="{% url 'poly_crud:edit_allergy' allergy.id %}">{{ allergy.allergy_prep }}</a></li>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'poly_crud:edit_allergy' allergy.id %}" role="button">{{ allergy.allergy_prep }}</a>
+          <p></p>
     {% empty %}
-        <li>Пока не добавлено ни одной аллергии.</li>
+        <p>Пока не добавлено ни одной аллергии</p>
     {% endfor %}
     </ul>
-    <button><a href="{% url 'poly_crud:add_allergy' %}">Добавить новую</a></button>
+    <a class="btn btn-info" href="{% url 'poly_crud:add_allergy' %}" role="button">Добавить новую</a>
     </table>
 </body>
 {% endblock content %}

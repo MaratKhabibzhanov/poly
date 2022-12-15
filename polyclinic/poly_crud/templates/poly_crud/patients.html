@@ -1,21 +1,25 @@
 {% extends "poly_crud/base.html" %}
-{% block content %}
+{% block header %}
 <head>
-    <meta charset="UTF-8">
     <title>Пациенты</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>Выберите пациента</h2>
+    </div>
 </head>
+{% endblock header %}
+{% block content %}
 <body>
-    <h1>Выберите пациента</h1>
     <table class="table">
     <ul>
     {% for patient in patients %}
-        <li><a href="{% url 'poly_crud:edit_patient' patient.card_no %}">{{ patient.second_name }}
-            {{ patient.first_name }} {{ patient.third_name }}</a></li>
+        <a class="btn btn-outline-primary btn-sm" href="{% url 'poly_crud:edit_patient' patient.card_no %}" role="button">{{ patient.second_name }}
+            {{ patient.first_name }} {{ patient.third_name }}</a>
+          <p></p>
     {% empty %}
-        <li>Пока не добавлено ни одного пациента</li>
+        <p>Пока не добавлено ни одного пациента</p>
     {% endfor %}
     </ul>
-    <button><a href="{% url 'poly_crud:add_patient' %}">Добавить нового</a></button>
+    <a class="btn btn-info" href="{% url 'poly_crud:add_patient' %}" role="button">Добавить нового</a>
     </table>
 </body>
 {% endblock content %}

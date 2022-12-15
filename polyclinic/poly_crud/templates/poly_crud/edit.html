@@ -1,26 +1,31 @@
 {% extends "poly_crud/base.html" %}
-{% block content %}
+{% load bootstrap5 %}
+{% block header %}
 <head>
-    <meta charset="UTF-8">
     <title>{{ title }}</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>{{ title }}</h2>
+    </div>
 </head>
+{% endblock header %}
+{% block content %}
 <body>
 {% if error %}
 {{ error }}
 {% endif %}
 <form method="post">
     {% csrf_token %}
-    <p>
-        {{ form.as_p }}
-    </p>
+    {% bootstrap_form form %}
+    {% buttons %}
+            <button name="submit" class="btn btn-info">Сохранить</button>
+    {% endbuttons %}
 
-    <input type="submit" value="Сохранить">
 </form>
 <p></p>
 <form  method="post">
 {% csrf_token %}
 <input id="action_id" type="hidden" name="action" value="Delete">
-<input type="submit" value="Удалить" />
+<input type="submit" value="Удалить" class="btn btn-info"/>
 </form>
 </body>
 {% endblock content %}

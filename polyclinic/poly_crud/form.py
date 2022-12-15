@@ -1,11 +1,5 @@
 import re
-
 from django import forms
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.template.context_processors import request
-
-from poly_crud.logic import get_group, select
 from poly_crud.models import *
 
 
@@ -24,15 +18,19 @@ class TreatmentForm(forms.Form):
     def __init__(self, *args, **kwargs):
         request = kwargs.pop('request')
         super(TreatmentForm, self).__init__(*args, **kwargs)
-        self.fields['id_doctor'].queryset = Doctor.objects.raw_as_qs("SELECT * FROM doctor;", db_user=get_group(request))
+        self.fields['id_doctor'].queryset = Doctor.objects.raw_as_qs("SELECT * FROM doctor;",
+                                                                     db_user=get_group(request))
         self.fields['card_no_patient'].queryset = Patient.objects.raw_as_qs("SELECT * FROM patient;",
-                                                                     db_user=get_group(request), pk='card_no')
+                                                                     db_user=get_group(request))
         self.fields['treatment_drag'].queryset = Drag.objects.raw_as_qs("SELECT * FROM drag;",
                                                                      db_user=get_group(request))
 
 
 class AllergyForm(forms.Form):
     allergy_prep = forms.CharField(label='Аллергия', empty_value=None, max_length=100)
+
+    def title_field(self):
+        self.cleaned_data['allergy_prep'] = self.cleaned_data['allergy_prep'].title()
 
 
 class SpecialityForm(forms.Form):

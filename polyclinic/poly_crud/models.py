@@ -5,22 +5,29 @@
 #   * Make sure each ForeignKey and OneToOneField has `on_delete` set to the desired behavior
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
-from django.db import models, connection, connections
+from django.contrib.auth import get_user
+from django.db import models, connections
 from django.db.models import UniqueConstraint
 from django.db.utils import InternalError, IntegrityError
 from psycopg2.sql import SQL, Literal, Identifier
 
-from poly_crud.logic import get_group, dictfetchall
+
+def dictfetchall(cursor):
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row))
+        for row in cursor.fetchall()
+    ]
+
+
+def get_group(request):
+    user = get_user(request)
+    group = 'doctor' if user.groups.filter(name='Доктор').exists() else 'default'
+    return group
 
 
 class MyManager(models.Manager):
-    def raw_as_qs(self, raw_query, params=(), db_user='default', pk='id'):
-        """Execute a raw query and return a QuerySet.  The first column in the
-        result set must be the id field for the model.
-        :type raw_query: str | unicode
-        :type params: tuple[T] | dict[str | unicode, T]
-        :rtype: django.db.models.query.QuerySet
-        """
+    def raw_as_qs(self, raw_query, params=(), db_user='default'):
         cursor = connections[db_user].cursor()
         try:
             cursor.execute(raw_query, params)

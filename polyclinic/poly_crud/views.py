@@ -4,8 +4,7 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from poly_crud.form import TreatmentForm, AllergyForm, SpecialityForm, DragForm, DoctorForm, PatientForm
-from poly_crud.logic import *
-from poly_crud.models import Doctor, Treatment, Patient, Drag, Allergy, Speciality
+from poly_crud.models import Doctor, Treatment, Patient, Drag, Allergy, Speciality, get_group
 
 
 def welcome(request):
@@ -21,7 +20,7 @@ def administrator(request):
 @login_required
 @permission_required('poly_crud.change_allergy')
 def allergies(request):
-    allergies = Allergy.objects.raw_as_qs("SELECT * FROM allergy;")
+    allergies = Allergy.objects.raw_as_qs("SELECT * FROM allergy;", db_user=get_group(request)).order_by('allergy_prep')
     context = {'allergies': allergies}
     return render(request, 'poly_crud/allergies.html', context)
 
@@ -33,18 +32,21 @@ def edit_allergy(request, id):
     if request.method == 'POST':
         form = AllergyForm(request.POST)
         if request.POST.get('action') == 'Delete':
-            context = Allergy.dell(request, id=id)
-            if context and context.get('error'):
-                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+            query = Allergy.dell(request, id=id)
+            if query and query.get('error'):
+                context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать аллергию'}
+                return render(request, 'poly_crud/edit.html', context)
             return HttpResponseRedirect(reverse('poly_crud:allergies'))
         if form.is_valid():
-            context = Allergy.edit(request=request, id=id, form=form)
-        if context.get('context'):
+            form.title_field()
+            query = Allergy.edit(request=request, id=id, form=form)
+        if query.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:allergies'))
-        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+        context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать аллергию'}
+        return render(request, 'poly_crud/edit.html', context)
     else:
         form = AllergyForm(data)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Редактировать аллергию'}
     return render(request, 'poly_crud/edit.html', context)
 
 
@@ -54,20 +56,22 @@ def add_allergy(request):
     if request.method == 'POST':
         form = AllergyForm(request.POST)
         if form.is_valid():
-            context = Allergy.add(request=request, form=form)
-            if context.get('context'):
+            form.title_field()
+            query = Allergy.add(request=request, form=form)
+            if query.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:allergies'))
-            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
+            context = {'form': form, 'error': query.get('error'), 'title': 'Добавить аллергию'}
+            return render(request, 'poly_crud/add.html', context)
     else:
         form = AllergyForm()
-    context = {'form': form}
+    context = {'form': form, 'title': 'Добавить аллергию'}
     return render(request, 'poly_crud/add.html', context)
 
 
 @login_required
 @permission_required('poly_crud.change_speciality')
 def specialties(request):
-    specialties = Speciality.objects.raw_as_qs("SELECT * FROM speciality;")
+    specialties = Speciality.objects.raw_as_qs("SELECT * FROM speciality;", db_user=get_group(request)).order_by('name')
     context = {'specialties': specialties}
     return render(request, 'poly_crud/specialties.html', context)
 
@@ -79,19 +83,21 @@ def edit_speciality(request, name):
     if request.method == 'POST':
         form = SpecialityForm(request.POST)
         if request.POST.get('action') == 'Delete':
-            context = Speciality.dell(request, id=name)
-            if context and context.get('error'):
-                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+            query = Speciality.dell(request, id=name)
+            if query and query.get('error'):
+                context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать специальность'}
+                return render(request, 'poly_crud/edit.html', context)
             return HttpResponseRedirect(reverse('poly_crud:specialties'))
         if form.is_valid():
             form.title_field()
-            context = Speciality.edit(request=request, id=name, form=form)
-        if context.get('context'):
+            query = Speciality.edit(request=request, id=name, form=form)
+        if query.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:specialties'))
-        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+        context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать специальность'}
+        return render(request, 'poly_crud/edit.html', context)
     else:
         form = SpecialityForm(data)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Редактировать специальность'}
     return render(request, 'poly_crud/edit.html', context)
 
 
@@ -102,20 +108,21 @@ def add_speciality(request):
         form = SpecialityForm(request.POST)
         if form.is_valid():
             form.title_field()
-            context = Speciality.add(request=request, form=form)
-            if context.get('context'):
+            query = Speciality.add(request=request, form=form)
+            if query.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:specialties'))
-            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
+            context = {'form': form, 'error': query.get('error'), 'title': 'Добавить специальность'}
+            return render(request, 'poly_crud/add.html', context)
     else:
         form = SpecialityForm()
-    context = {'form': form}
+    context = {'form': form, 'title': 'Добавить специальность'}
     return render(request, 'poly_crud/add.html', context)
 
 
 @login_required
 @permission_required('poly_crud.change_drag')
 def drags(request):
-    drags = Drag.objects.raw_as_qs("SELECT * FROM drag;")
+    drags = Drag.objects.raw_as_qs("SELECT * FROM drag;", db_user=get_group(request)).order_by('drag_name')
     context = {'drags': drags}
     return render(request, 'poly_crud/drags.html', context)
 
@@ -127,19 +134,21 @@ def edit_drag(request, id):
     if request.method == 'POST':
         form = DragForm(request.POST, request=request)
         if request.POST.get('action') == 'Delete':
-            context = Drag.dell(request, id=id)
-            if context and context.get('error'):
-                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+            query = Drag.dell(request, id=id)
+            if query and query.get('error'):
+                context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать лекарство'}
+                return render(request, 'poly_crud/edit.html', context)
             return HttpResponseRedirect(reverse('poly_crud:drags'))
         if form.is_valid():
             form.title_field()
-            context = Drag.edit(request=request, id=id, form=form)
-        if context.get('context'):
+            query = Drag.edit(request=request, id=id, form=form)
+        if query.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:drags'))
-        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+        context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать лекарство'}
+        return render(request, 'poly_crud/edit.html', context)
     else:
         form = DragForm(data, request=request)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Редактировать лекарство'}
     return render(request, 'poly_crud/edit.html', context)
 
 
@@ -150,19 +159,20 @@ def add_drag(request):
         form = DragForm(request.POST, request=request)
         if form.is_valid():
             form.title_field()
-            context = Drag.add(request=request, form=form)
-            if context.get('context'):
+            query = Drag.add(request=request, form=form)
+            if query.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:drags'))
-            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
+            context = {'form': form, 'error': query.get('error'), 'title': 'Добавить лекарство'}
+            return render(request, 'poly_crud/add.html', context)
     else:
         form = DragForm(request=request)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Добавить лекарство'}
     return render(request, 'poly_crud/add.html', context)
 
 @login_required
 @permission_required('poly_crud.change_doctor')
 def doctors(request):
-    doctors = Doctor.objects.raw_as_qs("SELECT * FROM doctor;")
+    doctors = Doctor.objects.raw_as_qs("SELECT * FROM doctor;", db_user=get_group(request)).order_by('second_name')
     context = {'doctors': doctors}
     return render(request, 'poly_crud/doctors.html', context)
 
@@ -174,19 +184,21 @@ def edit_doctor(request, id):
     if request.method == 'POST':
         form = DoctorForm(request.POST, request=request)
         if request.POST.get('action') == 'Delete':
-            context = Doctor.dell(request, id=id)
-            if context and context.get('error'):
-                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+            query = Doctor.dell(request, id=id)
+            if query and query.get('error'):
+                context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать доктора'}
+                return render(request, 'poly_crud/edit.html', context)
             return HttpResponseRedirect(reverse('poly_crud:doctors'))
         if form.is_valid():
             form.title_field()
-            context = Doctor.edit(request=request, id=id, form=form)
-        if context.get('context'):
+            query = Doctor.edit(request=request, id=id, form=form)
+        if query.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:doctors'))
-        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+        context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать доктора'}
+        return render(request, 'poly_crud/edit.html', context)
     else:
         form = DoctorForm(data, request=request)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Редактировать доктора'}
     return render(request, 'poly_crud/edit.html', context)
 
 
@@ -197,29 +209,30 @@ def add_doctor(request):
         form = DoctorForm(request.POST, request=request)
         if form.is_valid():
             form.title_field()
-            context = Doctor.add(request=request, form=form)
-            if context.get('context'):
+            query = Doctor.add(request=request, form=form)
+            if query.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:doctors'))
-            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
+            context = {'form': form, 'error': query.get('error'), 'title': 'Добавить доктора'}
+            return render(request, 'poly_crud/add.html', context)
     else:
         form = DoctorForm(request=request)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Добавить доктора'}
     return render(request, 'poly_crud/add.html', context)
 
 
 @login_required
 def treatments(request):
-    # patients = Patient.objects.using(get_group(request)).order_by('card_no')
-    treatments = select(request=request, table_name='patient', order_by='card_no')
-    context = {'treatments': treatments}
+    patients = Patient.objects.raw_as_qs("SELECT * FROM patient;",
+                                         db_user=get_group(request)).order_by('card_no')
+    context = {'patients': patients}
     return render(request, 'poly_crud/treatments.html', context)
 
 
 @login_required
 def tr_patients(request, card_no):
-    # treatments = Treatment.objects.using(get_group(request)).filter(card_no_patient=card_no).order_by('-date_in')
-    treatments = select(request=request, table_name='treatment', where_col=('card_no_patient',),
-                        where_val=(card_no,), order_by='date_in', desc=True)
+    treatments = Treatment.objects.raw_as_qs("SELECT * FROM treatment WHERE card_no_patient = %s ",
+                                             params=(card_no,),
+                                             db_user=get_group(request)).order_by('-date_in')
     context = {'treatments': treatments, 'card_no': card_no}
     return render(request, 'poly_crud/tr_patients.html', context)
 
@@ -232,18 +245,20 @@ def edit_treatment(request, id):
     if request.method == 'POST':
         form = TreatmentForm(request.POST, request=request)
         if request.POST.get('action') == 'Delete':
-            context = Treatment.dell(request, id=id, returning='card_no_patient')
-            if context and context.get('error'):
-                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+            query = Treatment.dell(request, id=id, returning='card_no_patient')
+            if query and query.get('error'):
+                context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать лечение'}
+                return render(request, 'poly_crud/edit.html', context)
             return HttpResponseRedirect(reverse('poly_crud:tr_patients'))
         if form.is_valid():
-            context = Treatment.edit(request=request, id=id, form=form)
-        if context.get('context'):
-            return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(context.get('context'),)))
-        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+            query = Treatment.edit(request=request, id=id, form=form)
+        if query.get('context'):
+            return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(query.get('context'),)))
+        context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать лечение'}
+        return render(request, 'poly_crud/edit.html', context)
     else:
         form = TreatmentForm(data, request=request)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Редактировать лечение'}
     return render(request, 'poly_crud/edit.html', context)
 
 
@@ -253,20 +268,21 @@ def add_treatment(request, card_no):
     if request.method == 'POST':
         form = TreatmentForm(request.POST, request=request)
         if form.is_valid():
-            context = Treatment.add(request=request, form=form)
-            if context.get('context'):
+            query = Treatment.add(request=request, form=form)
+            if query.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(card_no,)))
-            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
+            context = {'form': form, 'error': query.get('error'), 'title': 'Добавить лечение'}
+            return render(request, 'poly_crud/add.html', context)
     else:
         form = TreatmentForm(data, request=request)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Добавить лечение'}
     return render(request, 'poly_crud/add.html', context)
 
 
 @login_required
 @permission_required('poly_crud.change_patient')
 def patients(request):
-    patients = Patient.objects.raw_as_qs("SELECT * FROM patient;")
+    patients = Patient.objects.raw_as_qs("SELECT * FROM patient;", db_user=get_group(request)).order_by('second_name')
     context = {'patients': patients}
     return render(request, 'poly_crud/patients.html', context)
 
@@ -280,21 +296,24 @@ def edit_patient(request, card_no):
     if request.method == 'POST':
         form = PatientForm(request.POST, request=request)
         if request.POST.get('action') == 'Delete':
-            context = Patient.dell(request, id=card_no)
-            if context and context.get('error'):
-                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+            query = Patient.dell(request, id=card_no)
+            if query and query.get('error'):
+                context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать пациента'}
+                return render(request, 'poly_crud/edit.html', context)
             return HttpResponseRedirect(reverse('poly_crud:patients'))
         if form.is_valid():
             form.title_field()
-            context = Patient.edit(request=request, id=card_no, form=form)
+            query = Patient.edit(request=request, id=card_no, form=form)
         else:
-            return render(request, 'poly_crud/edit.html', {'form': form})
-        if context.get('context'):
+            context = {'form': form, 'title': 'Редактировать пациента'}
+            return render(request, 'poly_crud/edit.html', context)
+        if query.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:patients'))
-        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+        context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать пациента'}
+        return render(request, 'poly_crud/edit.html', context)
     else:
         form = PatientForm(data, request=request)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Редактировать пациента'}
     return render(request, 'poly_crud/edit.html', context)
 
 
@@ -305,13 +324,15 @@ def add_patient(request):
         form = PatientForm(request.POST, request=request)
         if form.is_valid():
             form.title_field()
-            context = Patient.add(request=request, form=form)
-            if context.get('context'):
+            query = Patient.add(request=request, form=form)
+            if query.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:patients'))
-            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
+            context = {'form': form, 'error': query.get('error'), 'title': 'Добавить пациента'}
+            return render(request, 'poly_crud/add.html', context)
         else:
-            return render(request, 'poly_crud/add.html', {'form': form})
+            context = {'form': form, 'title': 'Добавить пациента'}
+            return render(request, 'poly_crud/add.html', context)
     else:
         form = PatientForm(request=request)
-    context = {'form': form}
+    context = {'form': form, 'title': 'Добавить пациента'}
     return render(request, 'poly_crud/add.html', context)

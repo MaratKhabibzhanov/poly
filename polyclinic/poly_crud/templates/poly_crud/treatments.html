@@ -7,8 +7,8 @@
 <body>
     <h1>Выберите карту пациента.</h1>
     <ul>
-        {% for treatment in treatments %}
-            <li><a href="{% url 'poly_crud:tr_patients' treatment.card_no %}">{{ treatment.card_no }}</a></li>
+        {% for patient in patients %}
+            <li><a href="{% url 'poly_crud:tr_patients' patient.card_no %}">{{ patient.card_no }}</a></li>
         {% empty %}
             <li>Пока не добавлено ни одного пациента.</li>
         {% endfor %}

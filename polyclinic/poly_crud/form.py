@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -99,3 +101,22 @@ class PatientForm(forms.Form):
         self.cleaned_data['second_name'] = self.cleaned_data['second_name'].title()
         self.cleaned_data['third_name'] = self.cleaned_data['third_name'].title()
 
+
+    def clean_card_no(self):
+        data = self.cleaned_data['card_no']
+        if not re.match(r'[А-Я]{2}\d{4}[А-Я]{1}', data):
+            raise forms.ValidationError("Не правильный формат номера карты пациента!")
+        return data
+
+
+    def clean_med_policy(self):
+        data = self.cleaned_data['med_policy']
+        if len(data) != 16 or not data.isdigit():
+            raise forms.ValidationError("Не правильный формат номера медицинского полиса!")
+        return data
+
+    def clean_passport(self):
+        data = self.cleaned_data['passport']
+        if len(data) != 10 or not data.isdigit():
+            raise forms.ValidationError("Не правильный формат номера паспорта!")
+        return data

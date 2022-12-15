@@ -77,8 +77,8 @@ class Crud():
             except InternalError as err:
                 error = str(err).split('\n')[0]
                 return {'error': error}
-            # except IntegrityError:
-            #     return {'error': 'Такая запись уже есть!'}
+            except IntegrityError:
+                return {'error': 'Такая запись уже есть!'}
 
     @classmethod
     def edit(cls, request, id, form):
@@ -101,8 +101,8 @@ class Crud():
             except InternalError as err:
                 error = str(err).split('\n')[0]
                 return {'error': error}
-            # except IntegrityError:
-            #     return {'error': 'Такая запись уже есть!'}
+            except IntegrityError:
+                return {'error': 'Такая запись уже есть!'}
 
     @classmethod
     def dell(cls, request, id, returning=None):

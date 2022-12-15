@@ -31,21 +31,21 @@ def allergies(request):
 def edit_allergy(request, id):
     data = Allergy.select(request, id=id, select='select_allergy')[0]
     if request.method == 'POST':
+        form = AllergyForm(request.POST)
         if request.POST.get('action') == 'Delete':
             context = Allergy.dell(request, id=id)
             if context and context.get('error'):
-                return HttpResponse(context.get('error'))
+                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
             return HttpResponseRedirect(reverse('poly_crud:allergies'))
-        form = AllergyForm(request.POST)
         if form.is_valid():
             context = Allergy.edit(request=request, id=id, form=form)
         if context.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:allergies'))
-        return HttpResponse(context.get('error'))
+        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
     else:
         form = AllergyForm(data)
     context = {'form': form}
-    return render(request, 'poly_crud/edit_allergy.html', context)
+    return render(request, 'poly_crud/edit.html', context)
 
 
 @login_required
@@ -57,11 +57,11 @@ def add_allergy(request):
             context = Allergy.add(request=request, form=form)
             if context.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:allergies'))
-            return HttpResponse(context.get('error'))
+            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
     else:
         form = AllergyForm()
     context = {'form': form}
-    return render(request, 'poly_crud/add_allergy.html', context)
+    return render(request, 'poly_crud/add.html', context)
 
 
 @login_required
@@ -77,22 +77,22 @@ def specialties(request):
 def edit_speciality(request, name):
     data = Speciality.select(request, id=name, select='select_speciality')[0]
     if request.method == 'POST':
+        form = SpecialityForm(request.POST)
         if request.POST.get('action') == 'Delete':
             context = Speciality.dell(request, id=name)
             if context and context.get('error'):
-                return HttpResponse(context.get('error'))
+                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
             return HttpResponseRedirect(reverse('poly_crud:specialties'))
-        form = SpecialityForm(request.POST)
         if form.is_valid():
             form.title_field()
             context = Speciality.edit(request=request, id=name, form=form)
         if context.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:specialties'))
-        return HttpResponse(context.get('error'))
+        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
     else:
         form = SpecialityForm(data)
     context = {'form': form}
-    return render(request, 'poly_crud/edit_speciality.html', context)
+    return render(request, 'poly_crud/edit.html', context)
 
 
 @login_required
@@ -105,11 +105,11 @@ def add_speciality(request):
             context = Speciality.add(request=request, form=form)
             if context.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:specialties'))
-            return HttpResponse(context.get('error'))
+            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
     else:
         form = SpecialityForm()
     context = {'form': form}
-    return render(request, 'poly_crud/add_speciality.html', context)
+    return render(request, 'poly_crud/add.html', context)
 
 
 @login_required
@@ -125,22 +125,22 @@ def drags(request):
 def edit_drag(request, id):
     data = Drag.select(request, id=id, select='select_drag')[0]
     if request.method == 'POST':
+        form = DragForm(request.POST, request=request)
         if request.POST.get('action') == 'Delete':
             context = Drag.dell(request, id=id)
             if context and context.get('error'):
-                return HttpResponse(context.get('error'))
+                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
             return HttpResponseRedirect(reverse('poly_crud:drags'))
-        form = DragForm(request.POST, request=request)
         if form.is_valid():
             form.title_field()
             context = Drag.edit(request=request, id=id, form=form)
         if context.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:drags'))
-        return HttpResponse(context.get('error'))
+        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
     else:
         form = DragForm(data, request=request)
     context = {'form': form}
-    return render(request, 'poly_crud/edit_drag.html', context)
+    return render(request, 'poly_crud/edit.html', context)
 
 
 @login_required
@@ -153,11 +153,11 @@ def add_drag(request):
             context = Drag.add(request=request, form=form)
             if context.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:drags'))
-            return HttpResponse(context.get('error'))
+            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
     else:
         form = DragForm(request=request)
     context = {'form': form}
-    return render(request, 'poly_crud/add_drag.html', context)
+    return render(request, 'poly_crud/add.html', context)
 
 @login_required
 @permission_required('poly_crud.change_doctor')
@@ -172,22 +172,22 @@ def doctors(request):
 def edit_doctor(request, id):
     data = Doctor.select(request, id=id, select='select_doctor')[0]
     if request.method == 'POST':
+        form = DoctorForm(request.POST, request=request)
         if request.POST.get('action') == 'Delete':
             context = Doctor.dell(request, id=id)
             if context and context.get('error'):
-                return HttpResponse(context.get('error'))
+                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
             return HttpResponseRedirect(reverse('poly_crud:doctors'))
-        form = DoctorForm(request.POST, request=request)
         if form.is_valid():
             form.title_field()
             context = Doctor.edit(request=request, id=id, form=form)
         if context.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:doctors'))
-        return HttpResponse(context.get('error'))
+        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
     else:
         form = DoctorForm(data, request=request)
     context = {'form': form}
-    return render(request, 'poly_crud/edit_doctor.html', context)
+    return render(request, 'poly_crud/edit.html', context)
 
 
 @login_required
@@ -200,11 +200,11 @@ def add_doctor(request):
             context = Doctor.add(request=request, form=form)
             if context.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:doctors'))
-            return HttpResponse(context.get('error'))
+            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
     else:
         form = DoctorForm(request=request)
     context = {'form': form}
-    return render(request, 'poly_crud/add_doctor.html', context)
+    return render(request, 'poly_crud/add.html', context)
 
 
 @login_required
@@ -230,21 +230,21 @@ def edit_treatment(request, id):
     drag = Treatment.select(request, id=id, select='select_drag', out='list')
     data['treatment_drag'] = drag
     if request.method == 'POST':
+        form = TreatmentForm(request.POST, request=request)
         if request.POST.get('action') == 'Delete':
             context = Treatment.dell(request, id=id, returning='card_no_patient')
             if context and context.get('error'):
-                return HttpResponse(context.get('error'))
+                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
             return HttpResponseRedirect(reverse('poly_crud:tr_patients'))
-        form = TreatmentForm(request.POST, request=request)
         if form.is_valid():
             context = Treatment.edit(request=request, id=id, form=form)
         if context.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(context.get('context'),)))
-        return HttpResponse(context.get('error'))
+        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
     else:
         form = TreatmentForm(data, request=request)
     context = {'form': form}
-    return render(request, 'poly_crud/edit_treatment.html', context)
+    return render(request, 'poly_crud/edit.html', context)
 
 
 @login_required
@@ -256,11 +256,11 @@ def add_treatment(request, card_no):
             context = Treatment.add(request=request, form=form)
             if context.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(card_no,)))
-            return HttpResponse(context.get('error'))
+            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
     else:
         form = TreatmentForm(data, request=request)
     context = {'form': form}
-    return render(request, 'poly_crud/add_treatment.html', context)
+    return render(request, 'poly_crud/add.html', context)
 
 
 @login_required
@@ -278,22 +278,24 @@ def edit_patient(request, card_no):
     drag = Patient.select(request, id=card_no, select='select_allergy', out='list')
     data['patient_allergy'] = drag
     if request.method == 'POST':
-        if request.POST.get('action') == 'Delete':
-            context = Patient.dell(request, id=card_no, returning='card_no')
-            if context and context.get('error'):
-                return HttpResponse(context.get('error'))
-            return HttpResponseRedirect(reverse('poly_crud:patients'))
         form = PatientForm(request.POST, request=request)
+        if request.POST.get('action') == 'Delete':
+            context = Patient.dell(request, id=card_no)
+            if context and context.get('error'):
+                return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
+            return HttpResponseRedirect(reverse('poly_crud:patients'))
         if form.is_valid():
             form.title_field()
             context = Patient.edit(request=request, id=card_no, form=form)
+        else:
+            return render(request, 'poly_crud/edit.html', {'form': form})
         if context.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:patients'))
-        return HttpResponse(context.get('error'))
+        return render(request, 'poly_crud/edit.html', {'form': form, 'error': context.get('error')})
     else:
         form = PatientForm(data, request=request)
     context = {'form': form}
-    return render(request, 'poly_crud/edit_patient.html', context)
+    return render(request, 'poly_crud/edit.html', context)
 
 
 @login_required
@@ -306,8 +308,10 @@ def add_patient(request):
             context = Patient.add(request=request, form=form)
             if context.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:patients'))
-            return HttpResponse(context.get('error'))
+            return render(request, 'poly_crud/add.html', {'form': form, 'error': context.get('error')})
+        else:
+            return render(request, 'poly_crud/add.html', {'form': form})
     else:
         form = PatientForm(request=request)
     context = {'form': form}
-    return render(request, 'poly_crud/add_patient.html', context)
+    return render(request, 'poly_crud/add.html', context)

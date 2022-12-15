@@ -2,9 +2,12 @@
 {% block content %}
 <head>
     <meta charset="UTF-8">
-    <title>Редактировать лекарство</title>
+    <title>Редактировать запись</title>
 </head>
 <body>
+{% if error %}
+{{ error }}
+{% endif %}
 <form method="post">
     {% csrf_token %}
     <p>

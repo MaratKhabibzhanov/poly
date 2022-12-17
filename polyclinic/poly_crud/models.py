@@ -82,6 +82,8 @@ class Crud():
                 context = {'context': form_data[-1]}
                 return context
             except InternalError as err:
+                stmt = SQL(cls.del_master).format(id=Literal(id), ret=Identifier('id'))
+                cursor.execute(stmt)
                 error = str(err).split('\n')[0]
                 return {'error': error}
             except IntegrityError:

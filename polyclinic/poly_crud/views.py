@@ -249,7 +249,7 @@ def edit_treatment(request, id):
             if query and query.get('error'):
                 context = {'form': form, 'error': query.get('error'), 'title': 'Редактировать лечение'}
                 return render(request, 'poly_crud/edit.html', context)
-            return HttpResponseRedirect(reverse('poly_crud:tr_patients'))
+            return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(query.get('context'),)))
         if form.is_valid():
             query = Treatment.edit(request=request, id=id, form=form)
         if query.get('context'):

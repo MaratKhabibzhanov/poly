@@ -1,11 +1,14 @@
 import re
 from django import forms
+from django.contrib.admin.widgets import AdminDateWidget
 from poly_crud.models import *
 
 
 class TreatmentForm(forms.Form):
-    date_in = forms.DateField(label='Дата поступления')
-    date_out = forms.DateField(label='Дата выписки', required=False)
+    date_in = forms.DateField(label='Дата поступления',
+                              widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}))
+    date_out = forms.DateField(label='Дата выписки', required=False,
+                               widget=forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date'}))
     diagnosis = forms.CharField(label='Диагноз', required=False, empty_value=None, max_length=120)
     symptom = forms.CharField(label='Симптом', empty_value=None, max_length=120)
     id_doctor = forms.ModelChoiceField(label='Лечащий врач', queryset=None)

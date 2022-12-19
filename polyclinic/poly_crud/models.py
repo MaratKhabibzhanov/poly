@@ -12,6 +12,34 @@ from django.db.utils import InternalError, IntegrityError
 from psycopg2.sql import SQL, Literal, Identifier
 
 
+def query_a(request, query):
+    stmt = """SELECT first_name, second_name, third_name, avg_count_in_month 
+    FROM query_a WHERE symptom = %s ORDER BY 4 DESC;"""
+    with connections[get_group(request)].cursor() as cursor:
+        cursor.execute(stmt, [query, ])
+        return dictfetchall(cursor)
+
+
+def query_b(request, query):
+    query_list = query.split(',')
+    print(query_list)
+    stmt = SQL("SELECT card_no, first_name, second_name, third_name "
+               "FROM query_b "
+               "WHERE name_speciality IN ({specialities}) "
+               "ORDER BY freq DESC "
+               "LIMIT 10;").format(specialities=SQL(',').join(map(Literal, query_list)))
+    with connections[get_group(request)].cursor() as cursor:
+        cursor.execute(stmt)
+        return dictfetchall(cursor)
+
+
+def query_c(request, query):
+    stmt = "SELECT ward_number, days FROM query_c WHERE days <= %s ORDER BY ward_number;"
+    with connections[get_group(request)].cursor() as cursor:
+        cursor.execute(stmt, [query, ])
+        return dictfetchall(cursor)
+
+
 def dictfetchall(cursor):
     columns = [col[0] for col in cursor.description]
     return [
@@ -74,6 +102,7 @@ class Crud():
         form_data, form_slave = cls.data_preparation(form)
         with connections[get_group(request)].cursor() as cursor:
             try:
+                id = None
                 cursor.execute(cls.insert_master, [form_data, ])
                 if form_slave:
                     id = cursor.fetchone()[0]
@@ -82,8 +111,9 @@ class Crud():
                 context = {'context': form_data[-1]}
                 return context
             except InternalError as err:
-                stmt = SQL(cls.del_master).format(id=Literal(id), ret=Identifier('id'))
-                cursor.execute(stmt)
+                if id:
+                    stmt = SQL(cls.del_master).format(id=Literal(id), ret=Identifier('id'))
+                    cursor.execute(stmt)
                 error = str(err).split('\n')[0]
                 return {'error': error}
             except IntegrityError:
@@ -95,9 +125,9 @@ class Crud():
         with connections[get_group(request)].cursor() as cursor:
             try:
                 cursor.execute(cls.update_master, [form_data, id])
-                if form_slave:
-                    cursor.execute(cls.select_slave, [id, ])
-                    table_slave = [slave[cls.slave_id] for slave in dictfetchall(cursor)]
+                cursor.execute(cls.select_slave, [id, ])
+                table_slave = [slave[cls.slave_id] for slave in dictfetchall(cursor)]
+                if form_slave or table_slave:
                     for drag in form_slave:
                         if drag not in table_slave:
                             cursor.execute(cls.insert_slave, [(id, drag), ])

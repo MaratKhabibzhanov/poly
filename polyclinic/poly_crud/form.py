@@ -120,3 +120,15 @@ class PatientForm(forms.Form):
         if len(data) != 10 or not data.isdigit():
             raise forms.ValidationError("Не правильный формат номера паспорта!")
         return data
+
+
+class QueryaForm(forms.Form):
+    symptom = forms.CharField(label='Симптом', empty_value=None, max_length=120)
+
+
+class QuerybForm(forms.Form):
+    name_speciality = forms.CharField(label='Должности', help_text='Введите должности через запятую')
+
+
+class QuerycForm(forms.Form):
+    days = forms.IntegerField(label='Количество дней')

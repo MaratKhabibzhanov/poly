@@ -26,4 +26,5 @@ urlpatterns = [
     path('patients/', views.patients, name='patients'),
     re_path(r'^patient/edit/(?P<card_no>[А-Я]{2}\d{4}[А-Я]{1})/', views.edit_patient, name='edit_patient'),
     path('patient/add/', views.add_patient, name='add_patient'),
+    path('queries/', views.queries, name='queries'),
 ]

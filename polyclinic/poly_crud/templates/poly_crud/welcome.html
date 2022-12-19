@@ -9,7 +9,8 @@
 {% endblock header %}
 {% block content %}
 <body>
-    <a class="btn btn-info" href="{% url 'poly_crud:administrator' %}" role="button">Администрированием</a>
-    <a class="btn btn-info" href="{% url 'poly_crud:treatments' %}" role="button">Лечением</a>
+    <a class="btn btn-info" href="{% url 'poly_crud:administrator' %}" role="button">Администрированием</a><p></p>
+    <a class="btn btn-info" href="{% url 'poly_crud:treatments' %}" role="button">Лечением</a><p></p>
+    <a class="btn btn-info" href="{% url 'poly_crud:queries' %}" role="button">Смотреть запросы</a><p></p>
 </body>
 {% endblock content %}

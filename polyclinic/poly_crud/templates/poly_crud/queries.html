@@ -1,0 +1,50 @@
+{% extends "poly_crud/base.html" %}
+{% load bootstrap5 %}
+{% block header %}
+<head>
+    <title>Запросы</title>
+    <div class="container bg-light text-primary p-1">
+        <h2>Выберите какой нужен запрос и введите значение</h2>
+    </div>
+</head>
+{% endblock header %}
+{% block content %}
+ <div class="features">
+     <div class="container text p-1">
+         <br>
+        <h5>  Запрос А: Вывести среднее количество пациентов в месяц по каждому врачу с жалобой,
+            содержащей ключевое слово, заданное пользователем</h5>
+    </div>
+        <form method="post">
+            {% csrf_token %}
+            {% bootstrap_form form_a %}
+            {% buttons %}
+                    <button name="submit" class="btn btn-info">Ввод</button>
+            {% endbuttons %}
+        </form>
+     <div class="container text p-1">
+         <br>
+        <h5>  Запрос B: Вывести 10 пациентов которые чаще всего обращаются к врачам,
+            чьи должности заданы пользователем (например: Логопед, Педиатр)</h5>
+    </div>
+        <form method="post">
+            {% csrf_token %}<br>
+            {% bootstrap_form form_b %}
+            {% buttons %}
+                    <button name="submit" class="btn btn-info">Ввод</button>
+            {% endbuttons %}
+        </form>
+     <div class="container text p-1">
+         <br>
+        <h5>  Запрос C: Вывести палаты, в которых лежат пациенты не
+            более количества дней, заданного пользователем.</h5>
+    </div>
+        <form method="post">
+            {% csrf_token %}<br>
+            {% bootstrap_form form_c %}
+            {% buttons %}
+                    <button name="submit" class="btn btn-info">Ввод</button>
+            {% endbuttons %}
+        </form>
+    </div>
+{% endblock content %}

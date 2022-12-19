@@ -3,8 +3,9 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from poly_crud.form import TreatmentForm, AllergyForm, SpecialityForm, DragForm, DoctorForm, PatientForm
-from poly_crud.models import Doctor, Treatment, Patient, Drag, Allergy, Speciality, get_group
+from poly_crud.form import TreatmentForm, AllergyForm, SpecialityForm, DragForm, DoctorForm, PatientForm, QueryaForm, \
+    QuerybForm, QuerycForm
+from poly_crud.models import Doctor, Treatment, Patient, Drag, Allergy, Speciality, get_group, query_a, query_b, query_c
 
 
 def welcome(request):
@@ -336,3 +337,36 @@ def add_patient(request):
         form = PatientForm(request=request)
     context = {'form': form, 'title': 'Добавить пациента'}
     return render(request, 'poly_crud/add.html', context)
+
+@login_required
+@permission_required('poly_crud.change_patient')
+def queries(request):
+    error = ''
+    if request.method == 'POST':
+        form_a = QueryaForm(request.POST)
+        form_b = QuerybForm(request.POST)
+        form_c = QuerycForm(request.POST)
+        if form_a.is_valid():
+            clean_data = form_a.cleaned_data
+            query = query_a(request, clean_data.get('symptom'))
+            return render(request, 'poly_crud/query_a.html', {'query': query})
+        elif form_b.is_valid():
+            clean_data = form_b.cleaned_data
+            query = query_b(request, clean_data.get('name_speciality'))
+            return render(request, 'poly_crud/query_b.html', {'query': query})
+        elif form_c.is_valid():
+            clean_data = form_c.cleaned_data
+            query = query_c(request, clean_data.get('days'))
+            return render(request, 'poly_crud/query_c.html', {'query': query})
+        else:
+            error = 'Форма заполненна некорректно'
+    form_a = QueryaForm()
+    form_b = QuerybForm()
+    form_c = QuerycForm()
+    context = {
+        'form_a': form_a,
+        'form_b': form_b,
+        'form_c': form_c,
+        'error': error,
+    }
+    return render(request, 'poly_crud/queries.html', context)

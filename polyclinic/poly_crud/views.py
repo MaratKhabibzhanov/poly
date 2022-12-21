@@ -252,6 +252,7 @@ def edit_treatment(request, id):
                 return render(request, 'poly_crud/edit.html', context)
             return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(query.get('context'),)))
         if form.is_valid():
+            form.lower_field()
             query = Treatment.edit(request=request, id=id, form=form)
         if query.get('context'):
             return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(query.get('context'),)))
@@ -269,6 +270,7 @@ def add_treatment(request, card_no):
     if request.method == 'POST':
         form = TreatmentForm(request.POST, request=request)
         if form.is_valid():
+            form.lower_field()
             query = Treatment.add(request=request, form=form)
             if query.get('context'):
                 return HttpResponseRedirect(reverse('poly_crud:tr_patients', args=(card_no,)))

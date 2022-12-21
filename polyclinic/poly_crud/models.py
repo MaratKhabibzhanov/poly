@@ -21,8 +21,7 @@ def query_a(request, query):
 
 
 def query_b(request, query):
-    query_list = query.split(',')
-    print(query_list)
+    query_list = [query.title() for query in query.split(',')]
     stmt = SQL("SELECT card_no, first_name, second_name, third_name "
                "FROM query_b "
                "WHERE name_speciality IN ({specialities}) "
@@ -125,9 +124,9 @@ class Crud():
         with connections[get_group(request)].cursor() as cursor:
             try:
                 cursor.execute(cls.update_master, [form_data, id])
-                cursor.execute(cls.select_slave, [id, ])
-                table_slave = [slave[cls.slave_id] for slave in dictfetchall(cursor)]
-                if form_slave or table_slave:
+                if cls.slave_id:
+                    cursor.execute(cls.select_slave, [id, ])
+                    table_slave = [slave[cls.slave_id] for slave in dictfetchall(cursor)]
                     for drag in form_slave:
                         if drag not in table_slave:
                             cursor.execute(cls.insert_slave, [(id, drag), ])
@@ -174,6 +173,7 @@ class Allergy(Crud, models.Model):
     insert_master = """INSERT INTO allergy (allergy_prep) VALUES %s RETURNING id;"""
 
     update_master = """UPDATE allergy SET allergy_prep = %s WHERE id = %s;"""
+    slave_id = None
 
     def __str__(self):
         return self.allergy_prep
@@ -205,6 +205,7 @@ class Doctor(Crud, models.Model):
 
     update_master = """UPDATE doctor SET (first_name, second_name, third_name, ward_number, name_speciality)  = %s 
     WHERE id = %s;"""
+    slave_id = None
 
     def __str__(self):
         return f'{self.id} {self.name_speciality} {self.first_name} {self.second_name} {self.third_name}'
@@ -235,6 +236,7 @@ class Drag(Crud, models.Model):
     insert_master = """INSERT INTO drag (drag_name, id_allergy) VALUES %s RETURNING id;"""
 
     update_master = """UPDATE drag SET (drag_name, id_allergy) = %s WHERE id = %s;"""
+    slave_id = None
 
     def __str__(self):
         return self.drag_name
@@ -294,6 +296,7 @@ class Speciality(Crud, models.Model):
     insert_master = """INSERT INTO speciality (name, department_name) VALUES %s RETURNING name;"""
 
     update_master = """UPDATE speciality SET (name, department_name) = %s WHERE name = %s;"""
+    slave_id = None
 
     def __str__(self):
         return self.name

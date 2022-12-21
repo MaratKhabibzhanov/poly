@@ -27,6 +27,9 @@ class TreatmentForm(forms.Form):
         self.fields['treatment_drag'].queryset = Drag.objects.raw_as_qs("SELECT * FROM drag;",
                                                                      db_user=get_group(request))
 
+    def lower_field(self):
+        self.cleaned_data['symptom'] = self.cleaned_data['symptom'].lower()
+
 
 class AllergyForm(forms.Form):
     allergy_prep = forms.CharField(label='Аллергия', empty_value=None, max_length=100)

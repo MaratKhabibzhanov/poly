@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 import os
 from pathlib import Path
 import environ
+from django.core.management.utils import get_random_secret_key
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,10 +26,10 @@ environ.Env.read_env()
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = get_random_secret_key()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG')
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -42,10 +43,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.forms',
     'bootstrap5',
     'poly_crud',
     'users',
 ]
+
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -82,17 +86,17 @@ WSGI_APPLICATION = 'polyclinic.wsgi.application'
 DATABASES={
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DATABASE_NAME'),
-        'USER': env('DEFAULT_USER'),
-        'PASSWORD': env('DEFAULT_PASS'),
+        'NAME': 'polyclinic',
+        'USER': 'administrator',
+        'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '',
     },
     'doctor': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DATABASE_NAME'),
-        'USER': env('DOCTOR_USER'),
-        'PASSWORD': env('DOCTOR_PASS'),
+        'NAME': 'polyclinic',
+        'USER': 'doctor',
+        'PASSWORD': '1234',
         'HOST': 'localhost',
         'PORT': '',
     }

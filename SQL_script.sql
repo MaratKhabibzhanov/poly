@@ -185,8 +185,7 @@ BEGIN
 		LOOP
 			IF drag_group = allergy THEN
 				RAISE EXCEPTION 'У пациента аллергия на %!', (SELECT a.allergy_prep
-														  												FROM allergy AS a
-														  												WHERE a.id = allergy);
+				                                              FROM allergy AS a WHERE a.id = allergy);
 				EXIT;
 			END IF;
 		END LOOP;
@@ -280,7 +279,7 @@ BEGIN
 	SELECT date_in, date_out INTO d_in, d_out
 	FROM treatment 
 	WHERE card_no_patient = NEW.card_no_patient AND date_in = (SELECT MAX(date_in) FROM treatment
-																										WHERE card_no_patient = NEW.card_no_patient);
+	                                                            WHERE card_no_patient = NEW.card_no_patient);
 	IF d_in IS NOT NULL AND d_out IS NULL THEN
 		RAISE EXCEPTION 'У пациента ещё не закончилось предыдущее лечение!';
 	 ELSE
